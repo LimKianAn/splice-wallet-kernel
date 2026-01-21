@@ -74,8 +74,10 @@ export default class FireblocksSigningDriver implements SigningDriverInterface {
     }
     public partyMode = PartyMode.EXTERNAL
     public signingProvider = SigningProvider.FIREBLOCKS
-    public controller = (userId: AuthContext['userId'] | undefined) =>
-        buildController({
+    public controller = (authContext: AuthContext | undefined) => {
+        const userId = authContext?.userId
+
+        return buildController({
             signTransaction: async (
                 params: SignTransactionParams
             ): Promise<SignTransactionResult> => {
@@ -245,4 +247,5 @@ export default class FireblocksSigningDriver implements SigningDriverInterface {
             ): Promise<SubscribeTransactionsResult> =>
                 Promise.resolve({} as SubscribeTransactionsResult),
         })
+    }
 }

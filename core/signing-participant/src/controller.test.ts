@@ -23,12 +23,10 @@ test('driver properties', async () => {
 
 test('transaction signature', async () => {
     const signingDriver = new ParticipantSigningDriver()
-    const tx = await signingDriver
-        .controller(authContext.userId)
-        .signTransaction({
-            tx: TEST_TRANSACTION,
-            txHash: TEST_TRANSACTION_HASH,
-            keyIdentifier: { publicKey: '' },
-        })
+    const tx = await signingDriver.controller(authContext).signTransaction({
+        tx: TEST_TRANSACTION,
+        txHash: TEST_TRANSACTION_HASH,
+        keyIdentifier: { publicKey: '' },
+    })
     expect(tx.status).toBe('signed')
 })

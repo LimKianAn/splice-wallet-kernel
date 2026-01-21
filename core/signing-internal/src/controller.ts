@@ -68,8 +68,10 @@ export class InternalSigningDriver implements SigningDriverInterface {
         this.store = store
     }
 
-    public controller = (_userId: AuthContext['userId'] | undefined) =>
-        buildController({
+    public controller = (authContext: AuthContext | undefined) => {
+        const _userId = authContext?.userId
+
+        return buildController({
             signTransaction: async (
                 params: SignTransactionParams
             ): Promise<SignTransactionResult> => {
@@ -268,4 +270,5 @@ export class InternalSigningDriver implements SigningDriverInterface {
             ): Promise<SubscribeTransactionsResult> =>
                 Promise.resolve({} as SubscribeTransactionsResult),
         })
+    }
 }

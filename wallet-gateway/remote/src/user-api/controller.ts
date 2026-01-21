@@ -167,7 +167,7 @@ export const userController = (
             })
             const driver =
                 drivers[signingProviderId as SigningProvider]?.controller(
-                    userId
+                    authContext
                 )
 
             if (!driver) {
@@ -492,7 +492,7 @@ export const userController = (
 
             const notifier = notificationService.getNotifier(userId)
             const signingProvider = wallet.signingProviderId as SigningProvider
-            const driver = drivers[signingProvider]?.controller(userId)
+            const driver = drivers[signingProvider]?.controller(authContext)
 
             if (!driver) {
                 throw new Error('No driver found for WALLET_KERNEL')

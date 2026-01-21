@@ -32,11 +32,11 @@ export class SigningAPIClient {
 
     private async post<I extends Record<string, unknown>, O>(
         endpoint: string,
-        params: I
+        params: I,
+        authToken?: string
     ): Promise<O> {
         const url = `${this.baseUrl}${endpoint}`
 
-        // Merge context params (masterKey and testNetwork) into the request body
         const bodyToSend = {
             ...params,
             masterKey: this.masterKey,
@@ -47,8 +47,9 @@ export class SigningAPIClient {
             'Content-Type': 'application/json',
         }
 
-        if (this.apiKey) {
-            headers['Authorization'] = `Bearer ${this.apiKey}`
+        const token = authToken ?? this.apiKey
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`
         }
 
         const response = await fetch(url, {
@@ -76,63 +77,55 @@ export class SigningAPIClient {
         return response.json() as Promise<O>
     }
 
-    /**
-     * Uses the Wallet Provider to sign a transaction.
-     * @param params - The transaction signing parameters.
-     */
     public async signTransaction(
-        params: SignTransactionParams
+        params: SignTransactionParams,
+        authToken?: string
     ): Promise<Transaction> {
         return this.post<BlockDaemonSignTransactionParams, Transaction>(
             '/signTransaction',
             {
                 publicKey: params.keyIdentifier.publicKey!,
                 ...params,
-            }
+            },
+            authToken
         )
     }
 
-    /**
-     * Get the status of a single transaction by its ID.
-     * @param params - The transaction ID parameters.
-     */
     public async getTransaction(
-        params: GetTransactionParams
+        params: GetTransactionParams,
+        authToken?: string
     ): Promise<Transaction> {
         return this.post<GetTransactionParams, Transaction>(
             '/getTransaction',
-            params
+            params,
+            authToken
         )
     }
 
-    /**
-     * Get the status of multiple transactions.
-     * @param params - Filters for transactions.
-     */
     public async getTransactions(
-        params: GetTransactionsParams
+        params: GetTransactionsParams,
+        authToken?: string
     ): Promise<Transaction[]> {
-        // Note: The Go handler returns []Transaction, the HTTP handler wraps it in JSON array.
         return this.post<GetTransactionsParams, Transaction[]>(
             '/getTransactions',
-            params
+            params,
+            authToken
         )
     }
 
-    /**
-     * Get a list of public keys available for signing.
-     */
-    public async getKeys(): Promise<Key[]> {
-        // Go's addDummyArg is used for no-arg handlers, so we send an empty body.
-        return this.post<Record<string, never>, Key[]>('/getKeys', {})
+    public async getKeys(authToken?: string): Promise<Key[]> {
+        return this.post<Record<string, never>, Key[]>(
+            '/getKeys',
+            {},
+            authToken
+        )
     }
 
-    /**
-     * Create a new key at the Wallet Provider.
-     * @param params - The key creation parameters.
-     */
-    public async createKey(params: CreateKeyParams): Promise<Key> {
-        return this.post<CreateKeyParams, Key>('/createKey', params)
+    public async createKey(
+        params: CreateKeyParams,
+        authToken?: string
+    ): Promise<Key> {
+        return this.post<CreateKeyParams, Key>('/createKey', params, authToken)
     }
 
     /**

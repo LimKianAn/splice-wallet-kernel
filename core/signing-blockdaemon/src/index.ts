@@ -42,9 +42,10 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
     public partyMode = PartyMode.EXTERNAL
     public signingProvider = SigningProvider.BLOCKDAEMON
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public controller = (_userId: AuthContext['userId'] | undefined) =>
-        buildController({
+    public controller = (authContext: AuthContext | undefined) => {
+        const authToken = authContext?.accessToken
+
+        return buildController({
             signTransaction: async (
                 params: SignTransactionParams
             ): Promise<SignTransactionResult> => {
@@ -56,14 +57,17 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
                                 'The provided key identifier must include a publicKey.',
                         }
                     }
-                    const tx = await this.client.signTransaction({
-                        tx: params.tx,
-                        txHash: params.txHash,
-                        keyIdentifier: params.keyIdentifier,
-                        ...(params.internalTxId !== undefined && {
-                            internalTxId: params.internalTxId,
-                        }),
-                    })
+                    const tx = await this.client.signTransaction(
+                        {
+                            tx: params.tx,
+                            txHash: params.txHash,
+                            keyIdentifier: params.keyIdentifier,
+                            ...(params.internalTxId !== undefined && {
+                                internalTxId: params.internalTxId,
+                            }),
+                        },
+                        authToken
+                    )
                     return {
                         txId: tx.txId,
                         status: tx.status,
@@ -86,9 +90,10 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
                 params: GetTransactionParams
             ): Promise<GetTransactionResult> => {
                 try {
-                    const tx = await this.client.getTransaction({
-                        txId: params.txId,
-                    })
+                    const tx = await this.client.getTransaction(
+                        { txId: params.txId },
+                        authToken
+                    )
                     return {
                         txId: tx.txId,
                         status: tx.status,
@@ -112,10 +117,13 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
             ): Promise<GetTransactionsResult> => {
                 if (params.publicKeys || params.txIds) {
                     try {
-                        const transactions = await this.client.getTransactions({
-                            txIds: params.txIds!,
-                            publicKeys: params.publicKeys!,
-                        })
+                        const transactions = await this.client.getTransactions(
+                            {
+                                txIds: params.txIds!,
+                                publicKeys: params.publicKeys!,
+                            },
+                            authToken
+                        )
                         return {
                             transactions: transactions.map((tx) => ({
                                 txId: tx.txId,
@@ -141,7 +149,7 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
 
             getKeys: async (): Promise<GetKeysResult> => {
                 try {
-                    const keys = await this.client.getKeys()
+                    const keys = await this.client.getKeys(authToken)
                     return {
                         keys: keys.map((k) => ({
                             id: k.id,
@@ -161,9 +169,10 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
                 params: CreateKeyParams
             ): Promise<CreateKeyResult> => {
                 try {
-                    const key = await this.client.createKey({
-                        name: params.name,
-                    })
+                    const key = await this.client.createKey(
+                        { name: params.name },
+                        authToken
+                    )
                     return {
                         id: key.id,
                         name: key.name,
@@ -204,4 +213,5 @@ export default class BlockdaemonSigningDriver implements SigningDriverInterface 
             ): Promise<SubscribeTransactionsResult> =>
                 Promise.resolve({} as SubscribeTransactionsResult),
         })
+    }
 }

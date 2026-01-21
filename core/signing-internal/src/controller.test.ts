@@ -54,7 +54,7 @@ async function setupTest(keyName: string = TEST_KEY_NAME): Promise<TestValues> {
     const store = new StoreSql(db, pino(sink()), authContext)
 
     const signingDriver = new InternalSigningDriver(store)
-    const controller = signingDriver.controller(authContext.userId)
+    const controller = signingDriver.controller(authContext)
     const key = await controller.createKey({ name: keyName })
     return {
         signingDriver,
